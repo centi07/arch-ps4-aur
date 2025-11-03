@@ -29,7 +29,7 @@ makedepends=(
         'python-pyaml'
 )
 depends=(
-        'mesa-git'
+        'mesa-ps4'
         'lib32-gcc-libs'
         'lib32-libdrm'
         'lib32-wayland'
