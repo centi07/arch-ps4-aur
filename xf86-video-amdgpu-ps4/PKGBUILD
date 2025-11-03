@@ -1,8 +1,8 @@
-# Maintainer: Yurii Kolesnykov <root@yurikoles.com>
-# based on extra/xf86-video-amdgpu by
-# Laurent Carlier <lordheavym@gmail.com>
+# Maintainer: centi_07 <centi07 at proton dot me>
+# based xf860video-amdgpu-git by
+# Yurii Kolesnykov <root at yurikoles dot com>
 #
-# Send PRs here: https://github.com/yurikoles-aur/xf86-video-amdgpu-git
+# Send PRs here: https://github.com/centi07/arch-ps4-aur
 #
 
 pkgname=xf86-video-amdgpu-ps4
