@@ -1,0 +1,42 @@
+name: Build xf86-video-amdgpu-ps4
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize Arch keyring
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+
+      - name: Update system and install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git
+
+      - name: Compile
+        working-directory: xf86-video-amdgpu-ps4
+        run: |
+          makepkg -s
+
+      - name: Package build
+        working-directory: xf86-video-amdgpu-ps4
+        run: |
+          tar -czvf artifacts.tar.xz *.pkg.tar.zst --remove-files
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xf86-video-amdgpu-ps4
+          path: xf86-video-amdgpu-ps4/artifacts.tar.xz
