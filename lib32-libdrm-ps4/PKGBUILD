@@ -1,68 +1,62 @@
-# Maintainer: centi_07 <centi07 at proton dot me>
-# based on lib32=libdrm-git by
-# Yurii Kolesnykov <root at yurikoles dot com>
-#
-# Send PRs here: https://github.com/centi07/arch-ps4-aur
-#
-pkgname=lib32-libdrm-ps4
-pkgver=2.4.129.r0.ga8e5e10a
+# Maintainer: Laurent Carlier <lordheavym@gmail.com>
+# Contributor: Jan de Groot <jgc@archlinux.org>
+
+_pkgbasename=libdrm
+pkgname=lib32-$_pkgbasename
+pkgver=2.4.131
 pkgrel=1
-pkgdesc="Userspace interface to kernel DRM services, git 32-bit version"
+pkgdesc="Userspace interface to kernel DRM services (32-bit)"
+url="https://dri.freedesktop.org/"
 arch=(x86_64)
-license=('custom')
-depends=('libdrm-ps4' 'lib32-libpciaccess' 'lib32-gcc-libs')
-makedepends=('python-docutils' 'meson' 'git' 'ninja')
+license=('MIT')
+depends=('lib32-libpciaccess' 'lib32-glibc' $_pkgbasename)
+makedepends=('meson')
 checkdepends=('lib32-cairo')
-url="http://dri.freedesktop.org/"
-provides=('lib32-libdrm')
-conflicts=('lib32-libdrm')
 
-source=('libdrm::git+https://gitlab.freedesktop.org/mesa/drm.git'
-        COPYING
-        'libdrm-26.patch')
-sha256sums=('SKIP'
-            '9631d4f694952e3e6ae5a05534c2e93e994e47d3413677a3a00e45c8cef6db93'
-            'SKIP')
+source=(
+  https://dri.freedesktop.org/${_pkgbasename}/${_pkgbasename}-${pkgver}.tar.xz{,.sig}
+  ps4-lib32-libdrm.patch
+)
 
-          
-pkgver() {
-    cd libdrm
-    git describe --long --tags --abbrev=8 | sed 's/^libdrm-//;s/\([^-]*-g\)/r\1/;s/-/./g'
-}
+sha512sums=('d75894215600b648e25bbe13422901b650fb94bba8276d77971a49db7dc001819c9fc4b7e90ed82275f170a331687960ca5752cbb12064b2eec9c5c8eb60bf3c'
+            'SKIP'
+            '8e03fbb4d44bee75ca21bb2dd01bcd818bea133cce0482a213e28eb2e1ab9a5171696d5255928f180619555cb4a16bb9d0224e42a23e8bfbb6a8c240b668e59d')
+#validpgpkeys=('10A6D91DA1B05BD29F6DEBAC0C74F35979C486BE') # David Airlie <airlied@redhat.com>
+#validpgpkeys=('2617F6F8DEBB0A7A15C405C983FD600E340FB5FF') # Samuel Pitoiset <samuel.pitoiset@gmail.com>
+#validpgpkeys=('34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48') # emersion <contact@emersion.fr>
+validpgpkeys=('F3A52DB8ECE9EB9E33BC48C6917A3EE97A0FCD1A') # "Marek Olšák <maraeo@gmail.com>"
+#validpgpkeys=('34FF9526CFEF0E97A340E2E40FDE7BE0E88F5E48'  # Simon Ser <contact@emersion.fr>
+#              '3BB639E56F861FA2E86505690FDD682D974CA72A') # Matt Turner <mattst88@gmail.com>
 
 prepare() {
-    if [  -d _build ]; then
-        rm -rf _build
-    fi
+  cd $_pkgbasename-$pkgver
+  patch -Np1 -i "$srcdir/ps4-lib32-libdrm.patch"
 }
 
 build() {
-    export CC="gcc -m32"
-    export CXX="g++ -m32"
-    export PKG_CONFIG=/usr/bin/i686-pc-linux-gnu-pkg-config
-    meson setup libdrm _build \
-        --prefix /usr \
-        --libdir lib32 \
-        --buildtype plain \
-        --wrap-mode      nofallback \
-        -D udev=false \
-        -D valgrind=disabled
-    meson configure --no-pager _build
-    ninja -C _build
+  export CC="gcc -m32"
+  export CXX="g++ -m32"
+  export PKG_CONFIG_PATH="/usr/lib32/pkgconfig"
+
+  arch-meson $_pkgbasename-$pkgver build \
+    --libdir=/usr/lib32 \
+    -Dudev=false \
+    -Dman-pages=disabled \
+    -Detnaviv=disabled \
+    -Dfreedreno=disabled \
+    -Dvc4=disabled \
+    -Dvalgrind=disabled
+  meson compile -C build
 }
 
 check() {
-   # '-t 10' is needed for the 'threaded' test, which uses the default meson
-   # test timeout of 30 seconds. This is too short for many systems. It can be
-   # removed if upstream fixes the issue.
-    meson test -C _build -t 10
+  cd build
+  meson test --print-errorlogs
 }
 
 package() {
-    DESTDIR="$pkgdir" ninja -C _build install
-  
-    # remove files already provided by libdrm-git
-    rm -rf "$pkgdir"/usr/{include,share,bin}
-  
-    install -Dt "$pkgdir/usr/share/licenses/$pkgname"  -m644 COPYING
+  meson install -C build --destdir "$pkgdir"
+  rm -rf "${pkgdir}"/usr/{include,share,bin}
+  mkdir -p "$pkgdir/usr/share/licenses"
+  ln -s $_pkgbasename "$pkgdir/usr/share/licenses/$pkgname"
 }
