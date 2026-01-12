@@ -18,13 +18,18 @@ provides=("xf86-video-amdgpu=${pkgver}")
 conflicts=("xf86-video-amdgpu")
 groups=('xorg-drivers-git')
 source=("${pkgname}::git+https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu.git"
-        'amdgpu-23.0.0.patch')
+        'ps4-xf86-video-amdgpu.patch')
 sha256sums=('SKIP'
-            'SKIP')
+            '17f0504fc662a39d48b9bf33fe389472ce369442813d466430a5c54bbfb851e0')
 
 pkgver() {
   cd ${pkgname}
   git describe --tags | sed "s/^xf86-video-amdgpu.//;s/\([^-]*-g\)/r\1/;s/-/./g"
+}
+
+prepare() {
+  cd "$pkgname"
+  patch -Np1 -i "$srcdir/ps4-xf86-video-amdgpu.patch"
 }
 
 build() {
